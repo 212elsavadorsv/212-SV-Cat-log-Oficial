@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>LA 212 SV - Catálogo Oficial</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --azul-profundo: #081a2e;
+            --dorado-premium: #bfa05b;
+            --blanco-puro: #ffffff;
+            --gris-ultra-claro: #fcfcfc;
+            --gris-suave: #e0e0e0;
+            --whatsapp-verde: #25D366;
+            --fuente-principal: 'Poppins', sans-serif;
+            --fuente-logo: 'Oswald', sans-serif;
+        }
+
+        body { font-family: var(--fuente-principal); background-color: var(--gris-ultra-claro); margin: 0; padding-bottom: 90px; color: var(--azul-profundo); }
+        header { background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--gris-suave); position: sticky; top: 0; z-index: 100; }
+        .logo { font-family: var(--fuente-logo); font-weight: 600; font-size: 26px; letter-spacing: 2px; color: var(--azul-profundo); cursor: pointer; }
+        .logo span { color: var(--dorado-premium); }
+        
+        .tab-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; background: white; border-top: 1px solid var(--gris-suave); display: flex; justify-content: space-around; align-items: center; z-index: 100; }
+        .tab-item { display: flex; flex-direction: column; align-items: center; color: #888; font-size: 11px; cursor: pointer; text-transform: uppercase; }
+        .tab-item.activo { color: var(--dorado-premium); font-weight: bold; }
+
+        .contenedor-productos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px; max-width: 1000px; margin: 0 auto; }
+        .producto { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.02); }
+        .producto img { width: 100%; height: 170px; object-fit: cover; }
+        .producto-info { padding: 12px; }
+        .producto h3 { font-size: 13px; font-weight: 600; margin: 0 0 5px 0; height: 35px; overflow: hidden; }
+        .precio { color: var(--dorado-premium); font-weight: 700; font-size: 16px; }
+        .btn-quick-add { background: var(--azul-profundo); color: white; border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 300; justify-content: center; align-items: flex-end; }
+        .modal-content { background: white; padding: 25px; border-radius: 25px 25px 0 0; width: 100%; max-width: 450px; box-sizing: border-box; }
+        .btn-primario { background: var(--azul-profundo); color: white; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: 700; cursor: pointer; }
+
+        /* PANEL ADMIN MEJORADO */
+        #admin-panel { display: none; background: #fff; padding: 20px; margin: 15px; border-radius: 15px; border: 2px solid var(--dorado-premium); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .admin-section { background: #f9f9f9; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #eee; }
+        .admin-section h4 { margin: 0 0 10px 0; font-size: 14px; color: var(--dorado-premium); }
+        .btn-secundario { background: #6c757d; color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; cursor: pointer; margin-top: 5px; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo" onclick="trucoAdmin()">LA 212 <span>SV</span></div>
+        <div onclick="toggleCarrito()" style="cursor:pointer; font-size: 20px;">🛒 <span id="count" style="background:var(--dorado-premium); border-radius:50%; padding:2px 6px; font-size:12px;">0</span></div>
+    </header>
+
+    <nav class="tab-bar">
+        <div class="tab-item activo" onclick="filtrar('todos', this)"><i>👕</i> Todos</div>
+        <div class="tab-item" onclick="filtrar('actual', this)"><i>🔥</i> Actuales</div>
+        <div class="tab-item" onclick="filtrar('retro', this)"><i>💎</i> Retros</div>
+        <div class="tab-item" onclick="filtrar('mundial', this)"><i>🏆</i> Mundial</div>
+    </nav>
+
+    <main class="contenedor-productos" id="lista-productos"></main>
+
+    <section id="admin-panel">
+        <h3 style="margin-top:0;">🛠 Configuración de Tienda</h3>
+        
+        <div class="admin-section">
+            <h4>1. Agregar Nueva Camisa</h4>
+            <input type="text" id="admin-nombre" placeholder="Nombre" style="width:100%; padding:10px; margin-bottom:5px; box-sizing:border-box;">
+            <input type="number" id="admin-precio" placeholder="Precio $" style="width:100%; padding:10px; margin-bottom:5px; box-sizing:border-box;">
+            <select id="admin-categoria" style="width:100%; padding:10px; margin-bottom:5px;">
+                <option value="actual">Actual</option>
+                <option value="retro">Retro</option>
+                <option value="mundial">Mundial</option>
+            </select>
+            <input type="file" id="admin-foto" accept="image/*" style="font-size:12px; margin-bottom:10px;">
+            <button class="btn-primario" onclick="agregarATemporal()">AGREGAR A LA LISTA</button>
+        </div>
+
+        <div class="admin-section">
+            <h4>2. Sincronizar Catálogo</h4>
+            <p style="font-size:11px; color:#666;">Para que tus clientes vean los cambios, descarga el archivo y cárgalo aquí mismo cuando abras la app.</p>
+            <button onclick="descargarJSON()" style="background:#28a745; color:white; border:none; padding:10px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer;">📥 DESCARGAR JSON</button>
+            
+            <div style="margin-top:15px; border-top:1px solid #ddd; padding-top:10px;">
+                <label style="font-size:11px; font-weight:bold;">Subir Catálogo Existente:</label>
+                <input type="file" id="import-json" accept=".json" onchange="importarJSON(event)" style="font-size:12px; margin-top:5px;">
+            </div>
+        </div>
+
+        <button onclick="cerrarSesion()" class="btn-secundario">CERRAR PANEL</button>
+    </section>
+
+    <div id="modal-opciones" class="modal">
+        <div class="modal-content">
+            <h3 id="opciones-titulo">Configuración</h3>
+            <div style="margin-bottom:10px;"><label style="font-size:12px;">Versión:</label><select id="sel-version" style="width:100%; padding:10px;"><option>Fan (Sencilla)</option><option>Jugador (Slim Fit)</option></select></div>
+            <div style="margin-bottom:10px;"><label style="font-size:12px;">Talla:</label><select id="sel-talla" style="width:100%; padding:10px;"><option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option></select></div>
+            <div style="margin-bottom:10px;"><label style="font-size:12px;">Personalización:</label><input type="text" id="sel-personalizacion" placeholder="Ej: MESSI 10" style="width:100%; padding:10px; box-sizing:border-box;"></div>
+            <div style="margin-bottom:15px;"><label style="font-size:12px;">Cantidad:</label><input type="number" id="sel-cantidad" value="1" min="1" style="width:100%; padding:10px; box-sizing:border-box;"></div>
+            <button class="btn-primario" onclick="confirmarAgregar()">AÑADIR AL PEDIDO</button>
+            <button onclick="cerrarOpciones()" style="width:100%; margin-top:10px; background:none; border:none; color:#888;">Cancelar</button>
+        </div>
+    </div>
+
+    <div id="modal-carrito" class="modal">
+        <div class="modal-content" style="height: 70vh; display:flex; flex-direction:column;">
+            <h3 style="margin-top:0;">Mi Carrito</h3>
+            <div id="items-carrito" style="flex-grow:1; overflow-y:auto;"></div>
+            <div style="padding-top:15px; border-top:1px solid #eee;">
+                <div style="display:flex; justify-content:space-between; font-size:18px; font-weight:700; margin-bottom:10px;">
+                    <span>Total</span><span>$<span id="total">0</span></span>
+                </div>
+                <button class="btn-primario" onclick="enviarWA()" style="background:var(--whatsapp-verde)">PEDIR POR WHATSAPP</button>
+                <button onclick="toggleCarrito()" style="width:100%; margin-top:10px; background:none; border:none; color:#888;">Seguir viendo</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CLAVE_ADMIN = "212admin";
+        const NUMERO_WA = "50300000000"; 
+
+        let inventario = JSON.parse(localStorage.getItem('la212_backup')) || [];
+        let carrito = [];
+        let clicsLogo = 0;
+        let esAdmin = false;
+        let productoTemporal = null;
+
+        // --- FUNCIONES DE CARGA Y RENDER ---
+        function renderTienda(filtro = 'todos') {
+            const lista = document.getElementById('lista-productos');
+            lista.innerHTML = '';
+            const filtrados = filtro === 'todos' ? inventario : inventario.filter(p => p.categoria === filtro);
+            
+            if(filtrados.length === 0) {
+                lista.innerHTML = '<p style="grid-column: 1/-1; text-align:center; padding:40px; color:#999; font-size:13px;">Catálogo vacío.<br>Usa el panel de admin para subir productos.</p>';
+            }
+
+            filtrados.forEach(p => {
+                lista.innerHTML += `
+                    <div class="producto">
+                        <img src="${p.foto}">
+                        <div class="producto-info">
+                            <h3>${p.nombre}</h3>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span class="precio">$${p.precio}</span>
+                                <button class="btn-quick-add" onclick="abrirOpciones(${p.id})">+</button>
+                            </div>
+                            ${esAdmin ? `<button onclick="borrarProd(${p.id})" style="color:red; font-size:9px; border:none; background:none; margin-top:5px; cursor:pointer;">[ELIMINAR]</button>` : ''}
+                        </div>
+                    </div>`;
+            });
+        }
+
+        // --- ADMINISTRACIÓN ---
+        function agregarATemporal() {
+            const nombre = document.getElementById('admin-nombre').value;
+            const precio = document.getElementById('admin-precio').value;
+            const cat = document.getElementById('admin-categoria').value;
+            const fotoFile = document.getElementById('admin-foto').files[0];
+
+            if(!nombre || !precio || !fotoFile) return alert("Completa todos los campos.");
+
+            const reader = new FileReader();
+            reader.onloadend = function() {
+                const nuevo = { id: Date.now(), nombre, precio: parseFloat(precio), categoria: cat, foto: reader.result };
+                inventario.push(nuevo);
+                actualizarEstado();
+                alert("Agregado con éxito.");
+                document.getElementById('admin-nombre').value = '';
+                document.getElementById('admin-precio').value = '';
+            }
+            reader.readAsDataURL(fotoFile);
+        }
+
+        function descargarJSON() {
+            if(inventario.length === 0) return alert("No hay nada que descargar.");
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(inventario));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", "catalogo_212.json");
+            dlAnchor.click();
+        }
+
+        function importarJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const contenido = JSON.parse(e.target.result);
+                    if (Array.isArray(contenido)) {
+                        inventario = contenido;
+                        actualizarEstado();
+                        alert("¡Catálogo importado con éxito!");
+                    }
+                } catch (err) { alert("Error: El archivo no es un catálogo válido."); }
+            };
+            reader.readAsText(file);
+        }
+
+        function actualizarEstado() {
+            localStorage.setItem('la212_backup', JSON.stringify(inventario));
+            renderTienda();
+        }
+
+        // --- CARRITO ---
+        function abrirOpciones(id) { 
+            productoTemporal = inventario.find(p => p.id === id); 
+            document.getElementById('opciones-titulo').innerText = productoTemporal.nombre; 
+            document.getElementById('modal-opciones').style.display = 'flex'; 
+        }
+        function cerrarOpciones() { document.getElementById('modal-opciones').style.display = 'none'; }
+        
+        function confirmarAgregar() {
+            const cant = parseInt(document.getElementById('sel-cantidad').value);
+            carrito.push({ ...productoTemporal, version: document.getElementById('sel-version').value, talla: document.getElementById('sel-talla').value, personalizacion: document.getElementById('sel-personalizacion').value || "No", cantidad: cant, precioTotal: productoTemporal.precio * cant });
+            actualizarCarritoUI(); cerrarOpciones();
+        }
+
+        function actualizarCarritoUI() {
+            document.getElementById('count').innerText = carrito.reduce((a, b) => a + b.cantidad, 0);
+            const items = document.getElementById('items-carrito'); items.innerHTML = ''; let t = 0;
+            carrito.forEach((c, idx) => {
+                t += c.precioTotal;
+                items.innerHTML += `<div style="display:flex; gap:10px; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:10px; align-items:center;">
+                    <img src="${c.foto}" style="width:40px; height:40px; border-radius:5px; object-fit:cover;">
+                    <div style="flex-grow:1; font-size:12px;"><b>${c.cantidad}x ${c.nombre}</b><br>${c.version} | T<sup>a</sup> ${c.talla}</div>
+                    <div style="font-weight:bold; font-size:14px;">$${c.precioTotal}</div>
+                    <button onclick="quitar(${idx})" style="color:red; border:none; background:none; cursor:pointer; font-weight:bold;">✕</button>
+                </div>`;
+            });
+            document.getElementById('total').innerText = t;
+        }
+
+        function quitar(i) { carrito.splice(i,1); actualizarCarritoUI(); }
+        function toggleCarrito() { const m = document.getElementById('modal-carrito'); m.style.display = m.style.display === 'flex' ? 'none' : 'flex'; }
+        
+        function enviarWA() {
+            if(carrito.length === 0) return;
+            let txt = "⚽ *PEDIDO LA 212 SV*%0A%0A";
+            carrito.forEach(i => txt += `*${i.cantidad}x ${i.nombre}*%0A- ${i.version}%0A- Talla: ${i.talla}%0A- Pers: ${i.personalizacion}%0A- Subtotal: $${i.precioTotal}%0A%0A`);
+            txt += `*TOTAL: $${document.getElementById('total').innerText}*`;
+            window.open(`https://wa.me/${NUMERO_WA}?text=${txt}`, '_blank');
+        }
+
+        // --- UTILIDADES ---
+        function trucoAdmin() { 
+            clicsLogo++; 
+            if (clicsLogo >= 5) { 
+                if(prompt("Clave:") === CLAVE_ADMIN) { 
+                    esAdmin = true; 
+                    document.getElementById('admin-panel').style.display = 'block'; 
+                    renderTienda(); 
+                    window.scrollTo(0, 500);
+                } 
+                clicsLogo = 0; 
+            } 
+            setTimeout(()=> clicsLogo=0, 3000); 
+        }
+        function cerrarSesion() { esAdmin = false; document.getElementById('admin-panel').style.display = 'none'; renderTienda(); }
+        function filtrar(c, b) { document.querySelectorAll('.tab-item').forEach(x => x.classList.remove('activo')); b.classList.add('activo'); renderTienda(c); }
+        function borrarProd(id) { if(confirm("¿Eliminar este producto?")) { inventario = inventario.filter(p => p.id !== id); actualizarEstado(); } }
+
+        renderTienda();
+    </script>
+</body>
+</html>
